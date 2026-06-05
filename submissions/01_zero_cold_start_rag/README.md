@@ -2,6 +2,12 @@
 
 AWS CDK v2 (TypeScript) stack for event-driven document ingestion: S3 upload triggers a warm Lambda function that chunks documents, generates embeddings via Amazon Bedrock (Titan), and stores vectors in Aurora Serverless v2 PostgreSQL with pgvector.
 
+## Complete Prompt
+
+**Copy-paste prompt:** [`PROMPT_VERBATIM.txt`](PROMPT_VERBATIM.txt)
+
+Paste into an AI assistant to regenerate this project from scratch.
+
 ## Prerequisites
 
 - AWS CLI v2 with deploy credentials

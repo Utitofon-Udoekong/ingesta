@@ -1,0 +1,67 @@
+You are an Elite Principal AWS Cloud Architect, a senior DevSecOps specialist, and an expert in AWS Cloud Development Kit (CDK) v2 with TypeScript. 
+
+Your goal is to generate a complete, production-ready, compilable, and highly secure AWS CDK v2 stack in TypeScript named `ServerlessRagIngestionStack` that implements a **Zero-Cold-Start Event-Driven Serverless Document Ingestion Pipeline** for RAG (Retrieval-Augmented Generation).
+
+### Architectural Requirements
+
+1. **VPC & Network Isolation:**
+   - Create a VPC named `RagVpc` with 1 public subnet per AZ (for endpoints/NAT if ever required, though we want a completely private flow to save cost) and 2 isolated subnets per AZ (no internet route).
+   - The Aurora Serverless v2 cluster and the Lambda ingestion function must reside strictly inside the isolated subnets.
+   - Configure **VPC Gateway Endpoint for S3** and **VPC Interface Endpoints for Bedrock Runtime** to ensure all network traffic remains on the AWS private backbone.
+
+2. **Security & Least-Privilege IAM (Zero-Trust):**
+   - **No static passwords or secrets:** You must enable **IAM Database Authentication** on the Aurora cluster. The Lambda function will request a temporary IAM token to connect to PostgreSQL instead of using database passwords.
+   - **S3 Storage Security:** Block all public access, enable bucket key encryption, and encrypt the bucket using an AWS KMS Customer Managed Key (CMK).
+   - **Lambda IAM Roles:** Enforce strict least-privilege. The Lambda function execution role must only have permissions to:
+     - Read (GetObject) from the specific S3 ingestion bucket.
+     - Decrypt using the S3 bucket's KMS CMK.
+     - Connect to the RDS cluster using `rds-db:connect`.
+     - Invoke the specific Bedrock model: `amazon.titan-embed-text-v1`.
+     - Create log streams and write logs in its dedicated CloudWatch log group.
+   - **Security Groups:**
+     - The Lambda function's Security Group must have no inbound rules and allow outbound traffic only to the RDS Security Group on port 5432 and HTTPS (port 443) to VPC endpoints.
+     - The RDS Security Group must allow inbound TCP traffic on port 5432 *only* from the Lambda function's Security Group.
+
+3. **Zero-Cold-Start & Reliability:**
+   - Define an SQS Dead-Letter Queue (DLQ) to capture failed document ingestion events with 14-day retention.
+   - Configure the Lambda function with **Provisioned Concurrency** (set to 1) to eliminate cold starts during critical document processing.
+   - **Critical CDK Requirement for Provisioned Concurrency:** You must define a Lambda **Version** and a Lambda **Alias** (e.g., `prod`). The S3 event notification must trigger the **Alias ARN**, not the bare Lambda function ARN, since Provisioned Concurrency only applies to published versions and aliases.
+
+4. **Cost Optimization:**
+   - Configure the Aurora Serverless v2 PostgreSQL cluster with strict scaling boundaries: minimum capacity of `0.5` ACUs and maximum capacity of `2.0` ACUs to minimize idle costs.
+   - Set S3 Lifecycle rules: Transition raw documents to Glacier Instant Retrieval after 30 days, and expire (permanently delete) them after 90 days.
+   - Enforce CloudWatch Logs retention of exactly 14 days (do not leave it at the default "Never Expire").
+
+5. **Database Initialization (pgvector & Schema):**
+   - The Aurora cluster must run PostgreSQL v15 or later.
+   - Create a CDK `AwsCustomResource` or a secondary, short-lived Lambda-backed Custom Resource that connects to the database upon deployment, runs `CREATE EXTENSION IF NOT EXISTS vector;`, and sets up the schema table:
+     ```sql
+     CREATE TABLE IF NOT EXISTS document_embeddings (
+         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+         document_key VARCHAR(1024) NOT NULL,
+         chunk_index INT NOT NULL,
+         chunk_text TEXT NOT NULL,
+         embedding VECTOR(1536), -- 1536 is the dimension for Titan Embeddings
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+     );
+     CREATE INDEX IF NOT EXISTS document_embeddings_vector_idx ON document_embeddings USING hnsw (embedding vector_cosine_ops);
+     ```
+   - Provide the complete TypeScript code for this initialization custom resource/Lambda.
+
+6. **Monitoring & Cost Control:**
+   - Include an AWS Budgets resource (`CfnBudget`) that tracks overall account estimated charges and sends an SNS/Email alert if monthly forecasted costs exceed $50.
+   - Generate a CloudWatch Dashboard named `ServerlessRagDashboard` containing widgets for:
+     - Lambda Invocations, Errors, and Duration.
+     - SQS DLQ Message Depth (Visible Messages).
+     - Bedrock Invocation Throttles and Latency.
+
+### Code Output Requirements
+
+1. **TypeScript Completeness:** Provide the complete, single-file TypeScript code for the CDK stack (`serverless-rag-stack.ts`). Do not use placeholders, empty blocks, or comments like `// implement connection logic here`.
+2. **Lambda Handler Code:** Include the inline or separate file contents of the Lambda function (`index.ts` / `handler.ts`) in TypeScript, utilizing the AWS SDK v3 `@aws-sdk/client-bedrock-runtime` to call Bedrock, `pg` (Node-Postgres) to connect via IAM auth tokens, and `pg-promise` or vanilla queries to perform vector inserts.
+3. **Database Client Configuration:** Show exactly how to generate the IAM RDS connection token using `@aws-sdk/rds-signer` inside the Lambda function:
+   ```typescript
+   import { Signer } from '@aws-sdk/rds-signer';
+   // ... code to generate token dynamically for DB connections ...
+   ```
+4. **Dependencies (`package.json`):** Provide the exact list of devDependencies and dependencies required for both the CDK app and the Lambda function bundle.

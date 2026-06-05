@@ -1,0 +1,14 @@
+{
+  "name": "db-init-lambda",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.450.0",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.126",
+    "@types/pg": "^8.11.0",
+    "typescript": "^5.3.2"
+  }
+}

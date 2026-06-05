@@ -1,0 +1,16 @@
+{
+  "app": "npx ts-node bin/app.ts",
+  "context": {
+    "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": true,
+    "@aws-cdk/core:stackRelativeExports": true,
+    "@aws-cdk/aws-rds:databaseInsensitiveClusterIdentifier": true,
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
+    "@aws-cdk/aws-s3:grantWriteWithoutAcl": true,
+    "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:validateMapConnections": true,
+    "@aws-cdk/aws-s3:keepNotificationInSignerRole": true,
+    "@aws-cdk/aws-rds:preventLogSubscriptionDelay": true
+  }
+}

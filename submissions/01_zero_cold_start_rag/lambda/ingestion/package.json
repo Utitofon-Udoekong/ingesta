@@ -1,0 +1,16 @@
+{
+  "name": "ingestion-lambda",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.450.0",
+    "@aws-sdk/client-s3": "^3.450.0",
+    "@aws-sdk/rds-signer": "^3.450.0",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.126",
+    "@types/pg": "^8.11.0",
+    "typescript": "^5.3.2"
+  }
+}

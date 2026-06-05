@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# CDK
+cdk.out/
+.cdk.staging/
+
+# Build output
+dist/
+*.js.map
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cursor / tooling
+.specstory/
+.cursor/
+.cursorindexingignore
+
+# Hackathon / local-only (not published to GitHub)
+/context/
+/ideation/
+/drafts/
+/archive/
+/SUBMIT.md
+/README.md
+**/prompt.md
+**/PROMPT_VERBATIM.txt
+**/HACKATHON.md
+
+# Terraform (future submissions)
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
